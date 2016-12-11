@@ -101,6 +101,15 @@ int Graph::largestArcWeight() {
 	return largest;
 }
 
+int Graph::degree(int v) {
+    int sum = 0;
+    for (int i = 0; i < dimension; i++) {
+        if (values[v - 1][i] < INT_MAX) sum++;
+    }
+
+    return sum;
+}
+
 Graph Graph::primMST() {
 	std::vector<int> vertices(dimension, INT_MAX),
 	                 parent(dimension, -1),

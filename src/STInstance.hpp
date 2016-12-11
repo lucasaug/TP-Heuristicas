@@ -3,8 +3,8 @@
 
 #include "Graph.hpp"
 
-#ifndef TI_TSPINSTANCE
-#define TI_TSPINSTANCE
+#ifndef TI_STInstance
+#define TI_STInstance
 
 /**
  * Enum to identify edge distance types
@@ -15,16 +15,16 @@ enum Dist {
 };
 
 /**
- * This class describes an instance for the TSP
+ * This class describes an instance for the Steiner Tree
  */
-class TSPInstance {
+class STInstance {
 	private:
 	std::string name;
-	Dist dType;
+	std::vector<int> terminals;
 
 	public:
 	Graph graph;
-	TSPInstance(std::string, int, Dist);
+	STInstance(std::string, int);
 
 	void        setName(std::string);
 	std::string getName();
@@ -32,8 +32,9 @@ class TSPInstance {
 	void setDimension(int);
 	int  getDimension();
 
-	void setDType(Dist);
-	Dist getDType();
+	void setTerminals(std::vector<int>);
+	void addTerminal(int);
+	std::vector<int> getTerminals();
 
 	void setArcWeight(int, int, int);
 	int  getArcWeight(int, int);
@@ -54,6 +55,9 @@ class TSPInstance {
 	int VND(std::vector<int>&, int);
 	int SA(std::vector<int>&, int, float, int, float, float);
 
+	// Steiner Heuristics
+	int termMST(Graph&);
+	int removingSteinerLeafMST();
 };
 
 #endif

@@ -5,7 +5,7 @@
 #include <chrono>
 
 #include "InstanceReader.hpp"
-#include "TSPInstance.hpp"
+#include "STInstance.hpp"
 
 // Time measurement definitions
 #define duration(a) std::chrono::duration_cast<std::chrono::nanoseconds>(a).count()
@@ -30,111 +30,44 @@ int main(int argc, char* argv[]) {
 
 		InstanceReader reader = InstanceReader::getObject();
 		try {
-			TSPInstance G = reader.readTSPInstance(file);
+			STInstance G = reader.readSTInstance(file);
 
-			int treeLower = G.get1TreeLowerBound();
-			int mstLower = G.getMSTLowerBound();
+			Graph result;
 
-			std::vector<int> result;
-
-			// We run NN five times and get the average time
-			int NN;
+			// We run terminal MST five times and get the average time
+			int termMST;
 			Time t1 = timeNow();
 			for (int i = 0; i < 5; i++) {
-				NN = G.nearestNeighbor(result);
+				termMST = G.termMST(result);
 			}
-			double timeSpentNN = duration(timeNow() - t1) / 5.0;
+			double timeSpentTermMST = duration(timeNow() - t1) / 5.0;
 			// convert time to seconds
-			timeSpentNN /= 1000000000;
+			timeSpentTermMST /= 1000000000;
 
-			// We run double-tree five times and get the average time
-			int DT;
+			// We run Steiner Leaf Removing MST five times and get the average time
+			int removeStMST;
 			t1 = timeNow();
 			for (int i = 0; i < 5; i++) {
-				DT = G.doubleMST(result);
+				removeStMST = G.removingSteinerLeafMST();
 			}
-			double timeSpentDT = duration(timeNow() - t1) / 5.0;
+			double timeSpentRemoveStMST = duration(timeNow() - t1) / 5.0;
 			// convert time to seconds
-			timeSpentDT /= 1000000000;
+			timeSpentRemoveStMST /= 1000000000;
 
-			std::cout << G.getName() << ":\n";
-			std::cout << "1-Tree lower bound: " << treeLower << "\n";
-			std::cout << "Minimum spanning tree lower bound: " << mstLower << "\n";
-			std::cout << "Nearest neighbor heuristic cost: " << NN << "\n";
-			std::cout << "Elapsed time: " << timeSpentNN << " seconds\n";
-			std::cout << "Double Minimum Spanning Tree heuristic cost: " << DT << "\n";
-			std::cout << "Elapsed time: " << timeSpentDT << " seconds\n";
+			std::cout << G.getName() << "\n";
+			//std::cout << "Terminal MST heuristic cost: ";
+			//std::cout << termMST << "\n";
+			//std::cout << "Elapsed time: ";
+			std::cout << timeSpentTermMST << "\n";
+			//std::cout << " seconds\n";
+			//std::cout << "New MST heuristic cost: ";
+			//std::cout << removeStMST << "\n";
+			//std::cout << "Elapsed time: ";
+			std::cout << timeSpentRemoveStMST << "\n";
+			//std::cout << " seconds\n";
 			std::cout << "\n";
 
-			// We run 2-Opt local search five times and get the average time
-			int LS2;
-			t1 = timeNow();
-			for (int i = 0; i < 5; i++) {
-				// This is the call we actually use as a starting solution
-				NN = G.nearestNeighbor(result);
 
-				LS2 = G.twoOptSearch(result, NN);
-			}
-			double timeSpentLS2 = duration(timeNow() - t1) / 5.0;
-			// convert time to seconds
-			timeSpentLS2 /= 1000000000;
-
-			// We run 3-Opt local search five times and get the average time
-			int LS3;
-			t1 = timeNow();
-			for (int i = 0; i < 5; i++) {
-				// This is the call we actually use as a starting solution
-				NN = G.nearestNeighbor(result);
-
-				LS3 = G.threeOptSearch(result, NN, 0);
-			}
-			double timeSpentLS3 = duration(timeNow() - t1) / 5.0;
-			// convert time to seconds
-			timeSpentLS3 /= 1000000000;
-
-			// We run Variable Neighborhood Descent five times and get the average time
-			int VND;
-			t1 = timeNow();
-			for (int i = 0; i < 5; i++) {
-				// This is the call we actually use as a starting solution
-				NN = G.nearestNeighbor(result);
-
-				VND = G.VND(result, NN);
-			}
-			double timeSpentVND = duration(timeNow() - t1) / 5.0;
-			// convert time to seconds
-			timeSpentVND /= 1000000000;
-
-			// We run Simulated Annealing five times and get the average time
-			int SA = -1;
-			t1 = timeNow();
-			for (int i = 0; i < 5; i++) {
-				
-				// This is the call we actually use as a starting solution
-				NN = G.nearestNeighbor(result);
-
-				const int maxIter = 1400;
-				const float freezingTemp = 0.5;
-				const float alpha = 0.01;
-
-				int currSA = G.SA(result, NN, alpha, maxIter, NN, freezingTemp);
-				if (SA == -1 || currSA < SA) {
-					SA = currSA;
-				}
-			}
-			double timeSpentSA = duration(timeNow() - t1) / 5.0;
-			// convert time to seconds
-			timeSpentSA /= 1000000000;
-
-			std::cout << "2-Opt local search: " << LS2 << "\n";
-			std::cout << "Elapsed time: " << timeSpentLS2 << " seconds\n";
-			std::cout << "3-Opt local search: " << LS3 << "\n";
-			std::cout << "Elapsed time: " << timeSpentLS3 << " seconds\n";
-			std::cout << "Variable Neighborhood Descent: " << VND << "\n";
-			std::cout << "Elapsed time: " << timeSpentVND << " seconds\n";
-			std::cout << "Simulated Annealing: " << SA << "\n";
-			std::cout << "Elapsed time: " << timeSpentSA << " seconds\n";
-			std::cout << "*\n*\n";
 
 		} catch (std::exception& e) {
 			std::cout << "Error: " << e.what() << "\n";

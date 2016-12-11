@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 #include "Point.hpp"
-#include "TSPInstance.hpp"
+#include "STInstance.hpp"
 #include "InstanceReader.hpp"
 
 // Utility to trim spaces from string
@@ -27,7 +27,7 @@ InstanceReader::InstanceReader(InstanceReader const& x) {}
 void InstanceReader::operator=(InstanceReader const& x) {}
 
 // Actual reader
-TSPInstance InstanceReader::readTSPInstance(std::string fileName) {
+STInstance InstanceReader::readSTInstance(std::string fileName) {
 	std::ifstream inFile(fileName.c_str());
 
 	if (!inFile.good()) throw std::invalid_argument("File " + fileName + " not found.");
@@ -61,7 +61,7 @@ TSPInstance InstanceReader::readTSPInstance(std::string fileName) {
 	}
 
 	// Instantiate graph
-	TSPInstance G = TSPInstance(name, dimension, distType);
+	STInstance G = STInstance(name, dimension);
 	coords = std::vector<Point>();
 
 	int id;
@@ -85,6 +85,11 @@ TSPInstance InstanceReader::readTSPInstance(std::string fileName) {
 		}
 
 		coords.push_back(p);
+	}
+
+
+	for (int i = 1; i <= 10; i++) {
+		G.addTerminal(i);
 	}
 
 	if (coords.size() < dimension) throw std::logic_error("Number of coordinates lesser than informed dimension.");

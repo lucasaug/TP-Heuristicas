@@ -8,44 +8,48 @@
 
 #include "Graph.hpp"
 #include "Utils.hpp"
-#include "TSPInstance.hpp"
+#include "STInstance.hpp"
 
-TSPInstance::TSPInstance(std::string name, int dimension, Dist dType) {
+STInstance::STInstance(std::string name, int dimension) {
 	setName(name);
-	setDType(dType);
 
+	terminals = std::vector<int>();
 	graph = Graph(dimension);
 }
 
-void TSPInstance::setName(std::string newName) {
+void STInstance::setName(std::string newName) {
 	name = newName;
 }
 
-std::string TSPInstance::getName() {
+std::string STInstance::getName() {
 	return name;
 }
 
-void TSPInstance::setDimension(int newDimension) {
+void STInstance::setDimension(int newDimension) {
 	graph.setDimension(newDimension);
 }
 
-int TSPInstance::getDimension() {
+int STInstance::getDimension() {
 	return graph.getDimension();
 }
 
-void TSPInstance::setDType(Dist newDType) {
-	dType = newDType;
+void STInstance::setTerminals(std::vector<int> nTerm) {
+	terminals = nTerm;
 }
 
-Dist TSPInstance::getDType() {
-	return dType;
+void STInstance::addTerminal(int vertex) {
+	terminals.push_back(vertex);
 }
 
-void TSPInstance::setArcWeight(int i, int j, int value) {
+std::vector<int> STInstance::getTerminals() {
+	return terminals;
+}
+
+void STInstance::setArcWeight(int i, int j, int value) {
 	graph.setArcWeight(i, j, value);
 }
 
-int TSPInstance::getArcWeight(int i, int j) {
+int STInstance::getArcWeight(int i, int j) {
 	return graph.getArcWeight(i, j);
 }
 
@@ -54,7 +58,7 @@ int TSPInstance::getArcWeight(int i, int j) {
 // joins it with the leftover vertex using the two smallest
 // edges that join the MST with this vertex
 // The bound is the sum of the edges in the result
-int TSPInstance::get1TreeLowerBound() {
+int STInstance::get1TreeLowerBound() {
 	// Find sub-MST
 	Graph sub = graph.remove(1);
 	sub = sub.primMST();
@@ -75,14 +79,14 @@ int TSPInstance::get1TreeLowerBound() {
 
 // Returns the sum of the edges of the minimum spanning tree
 // for the graph
-int TSPInstance::getMSTLowerBound() {
+int STInstance::getMSTLowerBound() {
 	return graph.primMST().getEdgeSum();
 }
 
 // Nearest neighbor heuristic: starts with the cities in the smallest edge, then
 // finds the closest city to the last one inserted, and moves there. This process is repeated
 // until we visit every city. When that happens we return to the first city
-int TSPInstance::nearestNeighbor(std::vector<int>& path) {
+int STInstance::nearestNeighbor(std::vector<int>& path) {
 	int size = getDimension();
 	std::vector<int> inPath = std::vector<int>(size + 1, 0);
 	path = std::vector<int>();
@@ -138,18 +142,17 @@ int TSPInstance::nearestNeighbor(std::vector<int>& path) {
 // distance does not guarantee it, in this case we update the edges
 // on the graph to make it hold, and in the end we subtract the needed
 // amount
-int TSPInstance::doubleMST(std::vector<int>& path) {
+int STInstance::doubleMST(std::vector<int>& path) {
 	Graph g = graph;
 
 	int largest = 0;
-	if (dType == ATT) {
-		largest = graph.largestArcWeight();
 
-		for (int i = 1; i <= getDimension(); i++) {
-			//for (int j = 1; j <= getDimension(); j++) {
-			for (int j = i + 1; j <= getDimension(); j++) {
-				g.setArcWeight(i, j, getArcWeight(i, j) + largest);
-			}
+	largest = graph.largestArcWeight();
+
+	for (int i = 1; i <= getDimension(); i++) {
+		//for (int j = 1; j <= getDimension(); j++) {
+		for (int j = i + 1; j <= getDimension(); j++) {
+			g.setArcWeight(i, j, getArcWeight(i, j) + largest);
 		}
 	}
 
@@ -169,7 +172,7 @@ int TSPInstance::doubleMST(std::vector<int>& path) {
 }
 
 // Runs a local search using the 2-Opt first-improving neighborhood
-int TSPInstance::twoOptSearch(std::vector<int>& solution, int solutionValue) {
+int STInstance::twoOptSearch(std::vector<int>& solution, int solutionValue) {
 
 	int foundImprov = 1;
 	while (foundImprov) {
@@ -203,7 +206,7 @@ int TSPInstance::twoOptSearch(std::vector<int>& solution, int solutionValue) {
 
 // Runs a local search using the 3-Opt first-improving neighborhood
 // If singleIter == 1, only runs the search once: Used for VND
-int TSPInstance::threeOptSearch(std::vector<int>& solution, int solutionValue, int singleIter) {
+int STInstance::threeOptSearch(std::vector<int>& solution, int solutionValue, int singleIter) {
 
 	int foundImprov = 1;
 	while (foundImprov) {
@@ -291,7 +294,7 @@ int TSPInstance::threeOptSearch(std::vector<int>& solution, int solutionValue, i
 }
 
 // Variable Neighborhood Descent selecting between 2-Opt and 3-Opt
-int TSPInstance::VND(std::vector<int>& solution, int solutionValue) {
+int STInstance::VND(std::vector<int>& solution, int solutionValue) {
 
 	int foundImprov = 1;
 	while (foundImprov) {
@@ -310,7 +313,7 @@ int TSPInstance::VND(std::vector<int>& solution, int solutionValue) {
 }
 
 // Simulated Annealing generating random neighbors in the 2-Opt neighborhood
-int TSPInstance::SA(std::vector<int>& solution, int solutionValue, float alpha,
+int STInstance::SA(std::vector<int>& solution, int solutionValue, float alpha,
 	                int maxIter, float startingTemp, float freezingTemp) {
 	std::vector<int> current = solution;
 	int currentValue = solutionValue;
@@ -363,4 +366,47 @@ int TSPInstance::SA(std::vector<int>& solution, int solutionValue, float alpha,
 	}
 
 	return solutionValue;
+}
+
+// Creates a Minimum Spanning Tree for the terminal vertices
+int STInstance::termMST(Graph& result) {
+	Graph temp = Graph(terminals.size());
+
+	for (int i = 0; i < terminals.size(); i++) {
+		for (int j = 0; j < terminals.size(); j++) {
+			temp.setArcWeight(i + 1, j + 1, getArcWeight(terminals[i], terminals[j]));
+		}
+	}
+
+	temp = temp.primMST();
+	result = Graph(getDimension());
+
+	for (int i = 0; i < terminals.size(); i++) {
+		for (int j = 0; j < terminals.size(); j++) {
+			result.setArcWeight(terminals[i], terminals[j], temp.getArcWeight(i + 1, j + 1));
+		}
+	}
+
+	return temp.getEdgeSum();
+}
+
+// Creates a Minimum Spanning Tree for the whole graph and then removes
+// Steiner node leaves
+// This should return the resulting MST, but I'll leave it as an eternal TODO
+int STInstance::removingSteinerLeafMST() {
+	Graph temp = graph.primMST();
+	int checkLeaves = 1;
+
+	while (checkLeaves) {
+		checkLeaves = 0;
+		for (int i = 1; i <= temp.getDimension(); i++) {
+			if (std::find(terminals.begin(), terminals.end(), i) == terminals.end() &&
+				temp.degree(i) == 1) {
+				temp = temp.remove(i);
+				checkLeaves = 1;
+			}
+		}
+	}
+
+	return temp.getEdgeSum();
 }

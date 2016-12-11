@@ -36,6 +36,7 @@ class Graph {
 	Graph remove(int);
 	int getEdgeSum();
 	int largestArcWeight();
+	int degree(int);
 
 	Graph primMST();
 	void DFS(std::vector<int>&);
